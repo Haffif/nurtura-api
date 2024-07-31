@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('id_device');
             $table->foreignId('tipe_intruksi')->default(null);
             $table->float('volume')->default(0);
-            $table->float('durasi')->default(0);
             $table->boolean('isActive')->default(false);
             $table->boolean('isPending')->default(false);
             $table->string('mode');

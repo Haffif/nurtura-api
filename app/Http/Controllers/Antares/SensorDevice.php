@@ -11,6 +11,7 @@ use App\Models\Irrigation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 class SensorDevice
 {
@@ -56,23 +57,43 @@ class SensorDevice
             'kalium' => $con_data['pottasium'] == '-' ? 0 : $con_data['pottasium'],
         ];
 
-        $filteredData = array_filter($sensorData, function ($value) {
-            return $value !== 0;
-        });
-
-        $sensor = Sensor::where('timestamp_pengukuran', $currentTimestamp)->where('id_device', 'CAEP0v54HFOtV1FsuyB');
+        // Log::info($sensorData);
+        if($con_data['id_device'] == 'master'){
+            $filteredData = array_filter($sensorData, function ($value) {
+                return $value != 0;
+            });
+            Log::info('filtered');
+            Log::info($filteredData);
+        }
+     
+        Log::info($con_data['id_device']);
 
         try {
-            if ($sensor->exists()) {
-                if (!empty($filteredData)) {
-                    $sensor->update($filteredData);
-                    Log::info("Sensor data updated for device 'CAEP0v54HFOtV1FsuyB'.");
-                    $isComplete = true;
-                    Log::info($isComplete);
-                }
-            } else {
+            $now = Carbon::now();
+            if($con_data['id_device'] !== 'master'){
                 Sensor::create($sensorData);
                 Log::info("New sensor data created for device 'CAEP0v54HFOtV1FsuyB'.");
+            } else {
+                $sensors = Sensor::where('id_device', 'CAEP0v54HFOtV1FsuyB')
+                 ->orderBy('timestamp_pengukuran', 'desc')
+                 ->take(3)
+                 ->get();
+                foreach ($sensors as $sensor) {
+                    $sensorTimestamp = Carbon::parse($sensor->timestamp_pengukuran);
+                    $intervalInMinutes = $now->diffInMinutes($sensorTimestamp);
+                    Log::info($intervalInMinutes);
+                    if ($intervalInMinutes < 10) {
+                        if ($sensor->exists()) {
+                            if (!empty($filteredData)) {
+                                $sensor->update($filteredData);
+                                Log::info("Sensor data updated for device 'CAEP0v54HFOtV1FsuyB'.");
+
+                            }
+                        } 
+                    }
+                }
+                $isComplete = true;
+                Log::info($isComplete);
             }
         } catch (\Exception $e) {
             Log::error('Failed to save sensor data for device CAEP0v54HFOtV1FsuyB: ' . $e->getMessage());
@@ -80,8 +101,18 @@ class SensorDevice
 
         if ($isComplete) {
             $currentTimestamp = Carbon::now()->format('Y:m:d H:i');
-            $datas = Sensor::where('id_device', 'CAEP0v54HFOtV1FsuyB')->where('timestamp_pengukuran', $currentTimestamp)->get();
+            try {
+                $plantIds = ['plant001', 'plant002', 'plant003'];
+                $datas = Sensor::whereIn('id_plant', $plantIds)
+                ->select('id_plant', 'id', 'timestamp_pengukuran', 'suhu', 'kelembapan_udara', 'kelembapan_tanah', 'ph_tanah', 'nitrogen', 'fosfor', 'kalium')
+                ->orderBy('timestamp_pengukuran', 'desc')
+                ->get()
+                ->unique('id_plant');
+            } catch (\Throwable $th) {
+                Log::info($th);
+            }
 
+            Log::info($datas);
             $total_soil = 0;
             $total_hum = 0;
             $total_temp = 0;
@@ -100,9 +131,14 @@ class SensorDevice
             ];
 
             // // Rekomendasi ML irigasi 
-            $response = Http::post(route('ml.irrigation'), $avgData);
-            Log::info($response);
-            Log::info($avgData);
+            try {
+                $response = Http::post(route('ml.irrigation'), $avgData);
+                Log::info($response);
+                Log::info($avgData);
+            } catch (\Throwable $th) {
+                Log::info($th);
+            }
+           
 
             $data_response = json_decode($response, true)['data'];
 
@@ -114,7 +150,8 @@ class SensorDevice
                 $volume = 7 * $menit;
 
                 $dataDownlink = ([
-                    'data' => $type . $status . $durasi
+                    'data' => $type . $status,
+                    'durasi' => $durasi
                 ]);
 
                 $responseDownlink = Http::post(route('antares.downlink'), $dataDownlink);
@@ -134,7 +171,7 @@ class SensorDevice
                         $start = Carbon::now();
                         $end = $start->copy()->addSeconds($durasi);
 
-                        $addDevice = Device::create([
+                        Device::create([
                             'id_device' => 'CAEP0v54HFOtV1FsuyB',
                             'tipe_intruksi' => $type,
                             'durasi' => $durasi,

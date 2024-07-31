@@ -10,13 +10,9 @@ class SopPemupukan extends Model
     use HasFactory;
     protected $fillable = [
         'id_penanaman',
-        'hari_setelah_tanam',
+        'hst',
         'tinggi_tanaman_minimal_mm',
         'tinggi_tanaman_maksimal_mm',
-        'id_user',
-        'id_penanaman',
-        'jumlah_pupuk_ml',
-        'jumlah_air_ml',
         'created_at',
         'updated_at'
     ];

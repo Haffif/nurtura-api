@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_user');
             $table->string('id_device');
-            $table->boolean('isAssigned')->default(false);
             $table->timestamps();
         });
     }

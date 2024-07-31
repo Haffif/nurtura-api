@@ -17,8 +17,6 @@ return new class extends Migration
             $table->integer('hari_setelah_tanam');
             $table->float('tinggi_tanaman_minimal_mm');
             $table->float('tinggi_tanaman_maksimal_mm');
-            $table->float('jumlah_pupuk_ml')->default(0);
-            $table->float('jumlah_air_ml')->default(0); 
             $table->timestamps();
         });
     }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('fertilizer', function (Blueprint $table) {
             $table->id('id');
-            $table->id('id_penanaman');
+            $table->id('id_device');
             $table->boolean('isOptimal');
             $table->text('message');
             $table->double('waktu');

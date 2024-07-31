@@ -14,9 +14,12 @@ return new class extends Migration
         Schema::create('sop_pengairan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_penanaman');
-            $table->string('nama');
-            $table->string('min');
-            $table->string('max');
+            $table->float('temp_max')->default(0);
+            $table->float('temp_min')->default(0);
+            $table->float('humidity_max')->default(0);
+            $table->float('humidity_min')->default(0);
+            $table->float('soil_max')->default(0);
+            $table->float('soil_min')->default(0);
             $table->timestamps();
         });
     }

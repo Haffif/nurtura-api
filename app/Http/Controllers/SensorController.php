@@ -114,9 +114,16 @@ class SensorController extends Controller
             $id_device = $user->id_device;
 
             if (!empty($id_device)) {
-                $data_sensor = Sensor::where('id_device', $id_device)
-                    ->orderBy('created_at', 'desc') // Assuming 'created_at' is the timestamp column
-                    ->first();
+                // $data_sensor = Sensor::where('id_device', $id_device)
+                //     ->orderBy('created_at', 'desc') // Assuming 'created_at' is the timestamp column
+                //     ->first();
+                $plantIds = ['plant001', 'plant002', 'plant003'];
+                $data_sensor = Sensor::whereIn('id_plant', $plantIds)
+                    ->select('id_plant', 'id', 'timestamp_pengukuran', 'suhu', 'kelembapan_udara', 'kelembapan_tanah', 'ph_tanah', 'nitrogen', 'fosfor', 'kalium')
+                    ->orderBy('timestamp_pengukuran', 'desc')
+                    ->get()
+                    ->unique('id_plant');
+
                 if ($data_sensor == null) {
                     return response()->json([
                         'success' => false,
@@ -124,9 +131,38 @@ class SensorController extends Controller
                     ], 404);
                 }
 
+                $total_soil = 0;
+                $total_hum = 0;
+                $total_temp = 0;
+                $total_ph = 0;
+                $total_nitrogen = 0;
+                $total_fosfor = 0;
+                $total_kalium = 0;
+                $size = count($data_sensor);
+
+                foreach ($data_sensor as $data) {
+                    $total_soil += $data->kelembapan_tanah;
+                    $total_hum += $data->kelembapan_udara;
+                    $total_temp += $data->suhu;
+                    $total_ph += $data->ph_tanah;
+                    $total_nitrogen += $data->nitrogen;
+                    $total_fosfor += $data->fosfor;
+                    $total_kalium += $data->kalium;
+                }
+
+                $avgData = [
+                    "kelembapan_tanah" => $total_soil / $size,
+                    "kelembapan_udara" => $total_hum / $size,
+                    "suhu" => $total_temp / $size,
+                    "ph_tanah" => $total_ph / $size,
+                    "nitrogen" => $total_nitrogen / $size,
+                    "fosfor" => $total_fosfor / $size,
+                    "kalium" => $total_kalium / $size,
+                ];
+
                 return response()->json([
                     'success' => true,
-                    'data' => $data_sensor
+                    'data' => $avgData
                 ], 200);
             } else {
                 return response()->json([

@@ -137,33 +137,33 @@ class MachineLearningController extends Controller
         }
     }
 
-    public function predict(Request $request)
-    {
-        // Get prediction result from ML service
-        $response_predict = Http::get($this->URL_PREDICT)->json();
+    // public function predict(Request $request)
+    // {
+    //     // Get prediction result from ML service
+    //     $response_predict = Http::get($this->URL_PREDICT)->json();
 
-        // Save prediction result to database
-        // Sensor::create([
-        //     'id_penanaman' => Penanaman::where('alat_terpasang', true)->first()->id_penanaman,
-        //     'suhu' => $response_predict['temperature'],
-        //     'kelembapan_udara' => $response_predict['Humidity'],
-        //     'kelembapan_tanah' => $response_predict['SoilMoisture'],
-        //     'timestamp_prediksi_sensor' => $response_predict['Time'],
-        //     'created_at' => Carbon::now(),
-        // ]);
+    //     // Save prediction result to database
+    //     // Sensor::create([
+    //     //     'id_penanaman' => Penanaman::where('alat_terpasang', true)->first()->id_penanaman,
+    //     //     'suhu' => $response_predict['temperature'],
+    //     //     'kelembapan_udara' => $response_predict['Humidity'],
+    //     //     'kelembapan_tanah' => $response_predict['SoilMoisture'],
+    //     //     'timestamp_prediksi_sensor' => $response_predict['Time'],
+    //     //     'created_at' => Carbon::now(),
+    //     // ]);
 
-        // Run irrigation to get the irrigation command
-        $url_irrigation = route('ml.irrigation');
-        $response_irrigation = Http::post($url_irrigation, $response_predict)->json();
+    //     // Run irrigation to get the irrigation command
+    //     $url_irrigation = route('ml.irrigation');
+    //     $response_irrigation = Http::post($url_irrigation, $response_predict)->json();
 
-        // Return the response with prediction and irrigation data
-        return response()->json([
-            'status' => 200,
-            'data' => [
-                'predict' => $response_predict,
-                'irrigation' => $response_irrigation,
-            ],
-        ]);
-    }
+    //     // Return the response with prediction and irrigation data
+    //     return response()->json([
+    //         'status' => 200,
+    //         'data' => [
+    //             'predict' => $response_predict,
+    //             'irrigation' => $response_irrigation,
+    //         ],
+    //     ]);
+    // }
 
 }

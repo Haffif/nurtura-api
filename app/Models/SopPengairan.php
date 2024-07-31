@@ -12,9 +12,12 @@ class SopPengairan extends Model
     protected $fillable = [
         'id',
         'id_penanaman',
-        'nama',
-        'min',
-        'max',
+        'temp_max',
+        'temp_min',
+        'humidity_max',
+        'humidity_min',
+        'soil_max',
+        'soil_min',
         'created_at',
         'updated_at'
     ];

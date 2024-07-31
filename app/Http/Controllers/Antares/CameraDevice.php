@@ -84,10 +84,10 @@ class CameraDevice
                     // Setelah selesai mengirim gambar, hapus file .txt
                     unlink($txtFile);
 
-                    $plant = Plant::updateOrCreate(
-                        ['id' => $con_data['id']],
+                    $plant = Plant::create(
+                        // ['id' => $con_data['id']],
                         [
-                            // 'id' => $con_data['id'],
+                            'id' => $con_data['id'],
                             'id_device' => 'CAEP0v54HFOtV1FsuyB',
                             'url' => $imageUrl,
                             'posisi' => $con_data['posisi'],

@@ -60,10 +60,14 @@ class IrrigationScheduler
                         $device->save();
 
                         $dataDownlink = ([
-                            'data' => 1 . 'OPEN' . $device->durasi
+                            'data' => 1 . "OPEN",
+                            'durasi' => $device->durasi
                         ]);
+        
+                        $responseDownlink = Http::post(route('antares.downlink'), $dataDownlink);
+                    
 
-                       Http::post(route('antares.downlink'), $dataDownlink);
+                       //Http::post(route('antares.downlink'), $dataDownlink);
                          Log::info("irrigation scheduler : device pending started");
                     } else {
                          Log::info("irrigation scheduler : still pending device");

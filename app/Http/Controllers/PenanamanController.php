@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Fertilizer;
-use App\Models\log_penanaman;
+use App\Models\Lahan;
+use App\Models\log_tinggi;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
@@ -63,9 +64,9 @@ class PenanamanController extends Controller
                 $penanaman = Penanaman::where('id_user', $id_user)->get();
                 $id_penanaman = $penanaman->id;
 
-                $log_tinggi = log_penanaman::where('id_penanaman', $id_penanaman)->get();
+                $log_tinggi = log_tinggi::where('id_penanaman', $id_penanaman)->get();
             } else {
-                $log_tinggi = log_penanaman::where('id_penanaman', $id_penanaman)->get();
+                $log_tinggi = log_tinggi::where('id_penanaman', $id_penanaman)->get();
             }
 
             if ($log_tinggi->isEmpty()) {
@@ -93,11 +94,26 @@ class PenanamanController extends Controller
             $data = $request->validate([
                 'id_user' => 'required',
                 'id_lahan' => 'required',
+                'keterangan' => 'required',
                 // 'id_device' => 'required',
                 'nama_penanaman' => 'required',
                 'jenis_tanaman' => 'required',
                 'tanggal_tanam' => 'required',
+                'tanggal_panen' => 'nullable|date', 
             ]);
+            $existingPenanaman = Penanaman::where('id_lahan', $data['id_lahan'])->first();
+            $lahan = Lahan::where('id', $data['id_lahan'])->first();
+
+            if (!$lahan) {
+                throw ValidationException::withMessages([
+                    'id_lahan' => 'Lahan dengan ID ini tidak ditemukan.'
+                ]);
+            }
+            if ($existingPenanaman) {
+                throw ValidationException::withMessages([
+                    'error' => 'Lahan dengan ID ini sudah digunakan untuk penanaman lain.'
+                ]);
+            }
 
             Penanaman::create([
                 'id_user' => $data['id_user'],
@@ -105,9 +121,15 @@ class PenanamanController extends Controller
                 // 'id_device' => $data['id_device'],
                 'id_device' => "CAEP0v54HFOtV1FsuyB",
                 'nama_penanaman' => $data['nama_penanaman'],
+                'keterangan' => $data['keterangan'],
                 'jenis_tanaman' => $data['jenis_tanaman'],
                 'tanggal_tanam' => $data['tanggal_tanam'],
+                'tanggal_panen' => $data['tanggal_panen'] ?? null,
             ]);
+
+            $lahan = Lahan::where('id', $data['id_lahan'])->first();
+            $lahan->update(['isAssigned' => true]);
+
             return response()->json([
                 'success' => true,
                 'message'    => 'Data penanaman ditambahkan !',
@@ -125,28 +147,21 @@ class PenanamanController extends Controller
             $data = $request->validate([
                 'id_penanaman' => 'required',
                 'tanggal_pencatatan' => 'required',
-                'tinggi_tanaman' => 'required', // based in cm
+                'tinggi_tanaman' => 'required', // based in mm
             ]);
 
             $penanaman = Penanaman::find($data['id_penanaman']);
             Log::info($data);
 
             if ($penanaman) {
-                $penanaman->update([
-                    'tanggal_pencatatan' => $data['tanggal_pencatatan'],
-                    'tinggi_tanaman' => $data['tinggi_tanaman'],
-                ]);
-                
-                log_penanaman::create([
+                log_tinggi::create([
                     'id_penanaman' => $data['id_penanaman'],
-                    'nama_penanaman' => $penanaman->nama_penanaman,
-                    'jenis_tanaman' => $penanaman->jenis_tanaman,
                     'tinggi_tanaman' => $data['tinggi_tanaman'],
                     'tanggal_pencatatan' => $data['tanggal_pencatatan'],
                 ]);
 
                 $pupuk_ml_data = [
-                    "tinggi_tanaman" => $penanaman->tinggi_tanaman,
+                    "tinggi_tanaman" => $data['tinggi_tanaman'],
                     "hst" => $penanaman->hst,
                 ];
 
@@ -156,7 +171,7 @@ class PenanamanController extends Controller
                     $response = Http::post(route('ml.fertilizer'), $pupuk_ml_data);
                     if($response['status'] == 200){
                         Fertilizer::create([
-                            'id_penanaman' => $penanaman->id,
+                            'id_device' => $penanaman->id_device,
                             'isOptimal' => $response['data']['tinggi_optimal'],
                             'message' => $response['data']['message'],
                             'waktu' => $response['data']['waktu'],
@@ -164,10 +179,8 @@ class PenanamanController extends Controller
                     }
                 } catch (\Throwable $th) {
                     Log::info($th);
-                    //throw $th;
                 }
                 
-
                 return response()->json([
                     'success' => true,
                     'message'    => 'Data tinggi diupdate !',
@@ -179,6 +192,29 @@ class PenanamanController extends Controller
             return response()->json(['error' => 'Validation failed', 'messages' => $e->errors()], 422);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Server error', 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function update_hst(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'id_penanaman' => 'required',
+                'hst' => 'required',
+            ]);
+            
+            $penanaman = Penanaman::find($data['id_penanaman']);
+            if ($penanaman){
+                $penanaman -> update([
+                    'hst'=>$data['hst']
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message'    => 'Data HST diupdate !',
+                ], 200);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
         }
     }
 
@@ -210,17 +246,20 @@ class PenanamanController extends Controller
     {
         try {
             // Validasi input, hanya field yang disertakan yang divalidasi
+
             $data = $request->validate([
                 'id_penanaman' => 'required', // Pastikan ID penanaman disertakan untuk mencari data yang spesifik
                 'id_user' => 'sometimes|required',
                 'id_lahan' => 'sometimes|required',
                 'id_device' => 'sometimes|required',
+                'keterangan' => 'sometimes|required',
                 'nama_penanaman' => 'sometimes|required',
                 'jenis_tanaman' => 'sometimes|required',
                 'tanggal_tanam' => 'sometimes|required',
+                'tanggal_panen' => 'sometimes|required',
             ]);
-
-            $penanaman = Penanaman::find($data['id_penanaman']);
+            
+            $penanaman = Penanaman::where('id', $data['id_penanaman']);
 
             if (!$penanaman) {
                 return response()->json(['success' => false, 'message' => 'Data penanaman tidak ditemukan'], 404);

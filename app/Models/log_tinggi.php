@@ -5,14 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UserDevice extends Model
+class log_tinggi extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        'id_user',
-        'id_device',
+        'id',
+        'id_penanaman',
+        'nama_penanaman',
+        'tinggi_tanaman',
+        'jenis_tanaman',
+        'tanggal_pencatatan',
     ];
+
     protected $primaryKey = 'id';
-    public $incrementing = true;
-    protected $table = 'user_device';
+    protected $table = 'log_tinggi';
+
 }

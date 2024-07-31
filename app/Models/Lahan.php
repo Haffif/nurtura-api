@@ -16,9 +16,7 @@ class Lahan extends Model
         'deskripsi',
         'latitude',
         'longitude',
-        'isActive',
-        'kecamatan',
-        'kota',
+        'isAssigned',
         'created_at',
         'updated_at'
     ];

@@ -33,7 +33,7 @@ def send_images_in_directory(directory_path):
         for i, chunk in enumerate(chunks):
             status = "next" if i < total_chunks - 1 else "end"
             data = {
-                "id":"plant001",
+                "id":"plant003",
                 "posisi":"atas",
                 "image_data": chunk,
                 "status": status

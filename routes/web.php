@@ -83,6 +83,7 @@ Route::middleware('jwt.verify')->group(function () {
     });
     Route::group(['prefix' => 'irrigation'], function () {
         Route::get('data', [PengairanController::class, 'get_data']);
+        Route::get('data/latest', [PengairanController::class, 'get_latest_data']);
         Route::post('input', [PengairanController::class, 'input_manual']);
         Route::group([
             'prefix' => 'sop',
@@ -102,6 +103,7 @@ Route::middleware('jwt.verify')->group(function () {
     });
     Route::group(['prefix' => 'plant'], function () {
         Route::get('data', [TanamanController::class, 'get_plant']);
+        Route::get('data/latest', [TanamanController::class, 'get_latest_plant']);
     });
     Route::group(['prefix' => 'penanaman'], function () {
         Route::get('data', [PenanamanController::class, 'get_penanaman']); // get data penanaman by user id
@@ -110,6 +112,7 @@ Route::middleware('jwt.verify')->group(function () {
         Route::put('tinggi', [PenanamanController::class, 'update_tinggi']); // input manual atau update data penanaman
         Route::put('update', [PenanamanController::class, 'update_penanaman']);
         Route::delete('delete', [PenanamanController::class, 'delete_penanaman']);
+        Route::put('hst', [PenanamanController::class, 'update_hst']);
     });
     Route::group(['prefix' => 'lahan'], function () {
         Route::get('data', [LahanController::class, 'get_lahan']); // get data lahan by user id

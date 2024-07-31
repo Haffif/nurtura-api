@@ -62,6 +62,54 @@ class PengairanController extends Controller
         }
     }
 
+    public function get_latest_data(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'id_user' => 'required',
+            ]);
+
+            $id_user = $data['id_user'];
+            $user = UserDevice::where('id_user', $id_user)->first();
+            if ($user == null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ditemukan device untuk user ini. Mohon daftarkan device dahulu !'
+                ], 404);
+            }
+            $id_device = $user->id_device;
+
+            if (!empty($id_device)) {
+                // Mencari data irrigation terbaru yang memiliki id_user yang sesuai berdasarkan created_at
+                $latest_irrigation = Irrigation::where('id_device', $id_device)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                // Memeriksa apakah hasilnya kosong
+                if ($latest_irrigation == null) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tidak ada data yang ditemukan untuk id_device ini.'
+                    ], 404);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $latest_irrigation
+                ], 200);
+            }
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'messages' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            // Menangani kesairrigation server
+            return response()->json([
+                'error' => 'Server error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
     public function get_sop(Request $request)
     {
 
@@ -104,7 +152,7 @@ class PengairanController extends Controller
                 'volume' => 'required',
                 'start' => 'required',
                 'end' => 'required',
-                'durasi' => 'required',
+                // 'durasi' => 'required',
             ]);
 
             $now = Carbon::now();
@@ -144,7 +192,7 @@ class PengairanController extends Controller
             Device::create([
                 'id_device' => $id_device,
                 'tipe_intruksi' => 0,
-                'durasi' => $data['durasi'],
+                // 'durasi' => $data['durasi'],
                 'start' => $data['start'],
                 'isActive' => $isActive,
                 'isPending' => $isPending,
@@ -152,6 +200,8 @@ class PengairanController extends Controller
                 'volume' => $data['volume'],
                 'mode' => 'manual'
             ]);
+            return response()->json(['success' => 'Irrigation manual sent !'], 200);
+
         } catch (ValidationException $e) {
             return response()->json(['error' => 'Validation failed', 'messages' => $e->errors()], 422);
         } catch (\Exception $e) {
@@ -164,15 +214,25 @@ class PengairanController extends Controller
         try {
             $data = $request->validate([
                 'id_penanaman' => 'required',
-                'nama' => 'required', // Assuming 'nama' is unique
-                'min' => 'required',
-                'max' => 'required',
+                'temp_min' => 'required',
+                'temp_max' => 'required',
+                'humidity_min' => 'required',
+                'humidity_max' => 'required',
+                'soil_min' => 'required',
+                'soil_max' => 'required',
             ]);
 
             // Directly using updateOrCreate on the SopPengairan model
             $sop = SopPengairan::updateOrCreate(
-                ['id_penanaman' => $data['id_penanaman'], 'nama' => $data['nama']], // Key to find
-                ['min' => $data['min'], 'max' => $data['max']] // Data to update or create
+                ['id_penanaman' => $data['id_penanaman']], // Key to find
+                [
+                    'temp_max' => $data['temp_max'], 
+                    'temp_min' => $data['temp_min'],
+                    'humidity_max' => $data['humidity_max'],
+                    'humidity_min' => $data['humidity_min'],
+                    'soil_max' => $data['soil_max'],
+                    'soil_min' => $data['soil_min'],
+                ] // Data to update or create
             );
 
             return response()->json([

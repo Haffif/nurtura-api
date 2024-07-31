@@ -38,8 +38,11 @@ class ControllerDevice
 
         $body = [
             'm2m:cin' => [
+                "xmlns:m2m" => "http://www.onem2m.org/xml/protocols",
+                "cnf" => "application/json",
                 'con' => json_encode([
                     "data" => $request->input('data'),
+                    "durasi" => $request->input('durasi'),
                 ]),
             ],
         ];

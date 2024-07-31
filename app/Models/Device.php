@@ -14,7 +14,7 @@ class Device extends Model
         'id_user',
         'tipe_intruksi',
         'volume',
-        'durasi',
+        // 'durasi',
         'start',
         'end',
         'isActive',

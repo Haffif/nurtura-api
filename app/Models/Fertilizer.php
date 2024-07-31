@@ -10,10 +10,9 @@ class Fertilizer extends Model
     use HasFactory;
     protected $fillable = [
         'id',
-        'id_penanaman',
+        'id_device',
         'isOptimal',
         'message',
-        'waktu',
         'created_at',
         'updated_at'
     ];

@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('plant', function (Blueprint $table) {
+            $table->id('no');
             $table->string('id');
             $table->string('id_device');
             $table->string('url');

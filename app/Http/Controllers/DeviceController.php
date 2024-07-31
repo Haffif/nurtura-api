@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 use App\Models\User;
 use App\Models\Device;
+use App\Models\Penanaman;
 use App\Models\UserDevice;
 
 class DeviceController extends Controller
@@ -15,12 +16,12 @@ class DeviceController extends Controller
     {
         try {
             $data = $request->validate([
-                'id_user' => 'required',
+                'id_penanaman' => 'required'
             ]);
 
-            $id_user = $data['id_user'];
-            $user = UserDevice::where('id', $id_user)->first();
-            $id_device = $user->id_device;
+            $id_penanaman = $data['id_penanaman'];
+            $penanaman = Penanaman::where('id', $id_penanaman)->first();
+            $id_device = $penanaman->id_device;
 
             $devices = Device::where('id_device', $id_device)->get();
             if ($devices->isNotEmpty()) {
